@@ -2,7 +2,9 @@
 
 var WebSocketServer = require('ws').Server;
 var WebSocket = require('ws');
-var PORT = 8000;
+
+var HOST = process.env.OPENSHIFT_NODEJS_IP || 'localhost';
+var PORT = process.env.OPENSHIFT_NODEJS_PORT || 8000;
 
 // CloseEvent codes
 var DATA_SYNTAX_ERROR = 4000;
@@ -11,8 +13,8 @@ var KEY_ALREADY_EXISTS = 4002;
 var KEY_UNKNOWN = 4003;
 var KEY_NO_LONGER_AVAILABLE = 4004;
 
-var server = new WebSocketServer({ port: PORT }, function () {
-  console.log('Server runs on: ws://localhost:' + PORT);
+var server = new WebSocketServer({ host: HOST, port: PORT }, function () {
+  console.log('Server runs on: ' + HOST + ':' + PORT);
 });
 
 server.on('connection', function (socket) {
