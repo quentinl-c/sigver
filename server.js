@@ -1,7 +1,9 @@
 'use strict'
 let WebSocketServer = require('ws').Server
 let WebSocket = require('ws')
-const PORT = 8000
+
+const HOST = process.env.OPENSHIFT_NODEJS_IP || 'localhost'
+const PORT = process.env.OPENSHIFT_NODEJS_PORT || 8000
 
 // CloseEvent codes
 const DATA_SYNTAX_ERROR = 4000
@@ -10,8 +12,8 @@ const KEY_ALREADY_EXISTS = 4002
 const KEY_UNKNOWN = 4003
 const KEY_NO_LONGER_AVAILABLE = 4004
 
-let server = new WebSocketServer({port: PORT}, () => {
-  console.log('Server runs on: ws://localhost:' + PORT)
+let server = new WebSocketServer({host: HOST, port: PORT}, () => {
+  console.log('Server runs on: ' + HOST + ':' + PORT)
 })
 
 server.on('connection', (socket) => {
