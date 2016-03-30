@@ -4,7 +4,7 @@ var WebSocketServer = require('ws').Server;
 var WebSocket = require('ws');
 
 var HOST = process.env.OPENSHIFT_NODEJS_IP || 'localhost';
-var PORT = process.env.OPENSHIFT_NODEJS_PORT || 8000;
+var PORT = process.env.OPENSHIFT_NODEJS_PORT || 3000;
 
 // CloseEvent codes
 var DATA_SYNTAX_ERROR = 4000;
