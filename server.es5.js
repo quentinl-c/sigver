@@ -4,7 +4,7 @@ var WebSocketServer = require('ws').Server;
 var WebSocket = require('ws');
 
 var HOST = process.env.OPENSHIFT_NODEJS_IP || 'localhost';
-var PORT = process.env.OPENSHIFT_NODEJS_PORT || 3000;
+var PORT = process.env.OPENSHIFT_NODEJS_PORT || 8000;
 
 // CloseEvent codes
 var DATA_SYNTAX_ERROR = 4000;
@@ -23,7 +23,7 @@ server.on('connection', function (socket) {
     try {
       msg = JSON.parse(data);
     } catch (event) {
-      socket.close(DATA_SYNTAX_ERROR, 'Server accepts only JSON');
+      error(socket, DATA_SYNTAX_ERROR, 'Server accepts only JSON');
     }
     try {
       if (msg.hasOwnProperty('key')) {
@@ -36,7 +36,7 @@ server.on('connection', function (socket) {
             var master = _step.value;
 
             if (master.key === msg.key) {
-              socket.close(KEY_ALREADY_EXISTS, 'The key already exists');
+              error(socket, KEY_ALREADY_EXISTS, 'The key already exists');
               return;
             }
           }
@@ -75,6 +75,7 @@ server.on('connection', function (socket) {
             var _master = _step2.value;
 
             if (_master.key === msg.join) {
+              console.log('master found');
               socket.master = _master;
               _master.joiningClients.push(socket);
               var id = _master.joiningClients.length - 1;
@@ -97,17 +98,17 @@ server.on('connection', function (socket) {
           }
         }
 
-        socket.close(KEY_UNKNOWN, 'Unknown key');
+        error(socket, KEY_UNKNOWN, 'Unknown key');
       } else if (msg.hasOwnProperty('data') && socket.hasOwnProperty('master')) {
         var _id = socket.master.joiningClients.indexOf(socket);
         if (socket.master.readyState === WebSocket.OPEN) {
           socket.master.send(JSON.stringify({ id: _id, data: msg.data }));
         }
       } else {
-        socket.close(DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format');
+        error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format');
       }
     } catch (event) {
-      socket.close(DATA_SYNTAX_ERROR, 'Server accepts only JSON');
+      error(socket, DATA_SYNTAX_ERROR, 'erver accepts only JSON');
     }
   });
 
@@ -140,5 +141,10 @@ server.on('connection', function (socket) {
     }
   });
 });
+
+function error(socket, code, msg) {
+  console.log('Error ' + code + ': ' + msg);
+  socket.close(code, msg);
+}
 
 module.exports = server;
