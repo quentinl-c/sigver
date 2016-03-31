@@ -3,7 +3,7 @@ let WebSocketServer = require('ws').Server
 let WebSocket = require('ws')
 
 const HOST = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1'
-const PORT = process.env.OPENSHIFT_NODEJS_PORT || 8080
+const PORT = process.env.OPENSHIFT_NODEJS_PORT || 3000
 
 // CloseEvent codes
 const DATA_SYNTAX_ERROR = 4000
