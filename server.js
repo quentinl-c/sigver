@@ -9,8 +9,8 @@ const KEY_UNKNOWN = 4003
 const KEY_NO_LONGER_AVAILABLE = 4004
 
 let settings = {
-  host: 'localhost',
-  port: 8000
+  host: process.env.NODE_IP || 'localhost',
+  port: process.env.NODE_PORT || 8000
 }
 process.argv.forEach((value, index, array) => {
   if (value.match('-(h|-host)')) {

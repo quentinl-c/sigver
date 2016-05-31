@@ -11,8 +11,8 @@ var KEY_UNKNOWN = 4003;
 var KEY_NO_LONGER_AVAILABLE = 4004;
 
 var settings = {
-  host: 'localhost',
-  port: 8000
+  host: process.env.NODE_IP,
+  port: process.env.NODE_PORT
 };
 process.argv.forEach(function (value, index, array) {
   if (value.match('-(h|-host)')) {
