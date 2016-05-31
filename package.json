@@ -4,7 +4,7 @@
   "version": "0.0.0-sementically-released",
   "main": "server.es5.js",
   "scripts": {
-    "start": "node server.js -h $OPENSHIFT_NODEJS_IP -p $OPENSHIFT_NODEJS_PORT",
+    "start": "node server.js --port 8080",
     "build": "babel --presets es2015 -o server.es5.js server.js",
     "test": "node test.js",
     "commit": "git-cz",
