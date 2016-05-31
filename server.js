@@ -1,9 +1,5 @@
-'use strict'
 let WebSocketServer = require('ws').Server
 let WebSocket = require('ws')
-
-const HOST = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1'
-const PORT = process.env.OPENSHIFT_NODEJS_PORT || 3000
 
 // CloseEvent codes
 const DATA_SYNTAX_ERROR = 4000
@@ -12,8 +8,20 @@ const KEY_ALREADY_EXISTS = 4002
 const KEY_UNKNOWN = 4003
 const KEY_NO_LONGER_AVAILABLE = 4004
 
-let server = new WebSocketServer({host: HOST, port: PORT}, () => {
-  console.log('Server runs on: ' + HOST + ':' + PORT)
+let settings = {
+  host: 'localhost',
+  port: 8000
+}
+process.argv.forEach((value, index, array) => {
+  if (value.match('-(h|-host)')) {
+    settings.host = array[index + 1]
+  } else if (value.match('-(p|-port)')) {
+    settings.port = array[index + 1]
+  }
+})
+
+let server = new WebSocketServer(settings, () => {
+  console.log(`Server runs on: ws://${settings.host}:${settings.port}`)
 })
 
 server.on('connection', (socket) => {
@@ -25,7 +33,7 @@ server.on('connection', (socket) => {
       error(socket, DATA_SYNTAX_ERROR, 'Server accepts only JSON')
     }
     try {
-      if (msg.hasOwnProperty('key')) {
+      if ('key' in msg) {
         for (let master of server.clients) {
           if (master.key === msg.key) {
             error(socket, KEY_ALREADY_EXISTS, 'The key already exists')
@@ -34,7 +42,7 @@ server.on('connection', (socket) => {
         }
         socket.key = msg.key
         socket.joiningClients = []
-      } else if (msg.hasOwnProperty('id')) {
+      } else if ('id' in msg) {
         for (let index in socket.joiningClients) {
           if (index === msg.id.toString()) {
             socket.joiningClients[index].send(JSON.stringify({data: msg.data}))
@@ -42,7 +50,7 @@ server.on('connection', (socket) => {
           }
         }
         socket.send(JSON.stringify({id: msg.id, unavailable: true}))
-      } else if (msg.hasOwnProperty('join')) {
+      } else if ('join' in msg) {
         for (let master of server.clients) {
           if (master.key === msg.join) {
             console.log('master found')
@@ -54,21 +62,23 @@ server.on('connection', (socket) => {
           }
         }
         error(socket, KEY_UNKNOWN, 'Unknown key')
-      } else if (msg.hasOwnProperty('data') && socket.hasOwnProperty('master')) {
+      } else if ('data' in msg && 'master' in socket) {
         let id = socket.master.joiningClients.indexOf(socket)
         if (socket.master.readyState === WebSocket.OPEN) {
           socket.master.send(JSON.stringify({id, data: msg.data}))
         }
-      } else {
-        error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format')
       }
+      // } else {
+      //   console.log('data: ', msg)
+      //   error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format')
+      // }
     } catch (event) {
       error(socket, DATA_SYNTAX_ERROR, 'erver accepts only JSON')
     }
   })
 
   socket.on('close', (event) => {
-    if (socket.hasOwnProperty('joiningClients')) {
+    if ('joiningClients' in socket) {
       for (let client of socket.joiningClients) {
         client.close(KEY_NO_LONGER_AVAILABLE, 'The peer is no longer available')
       }

@@ -3,9 +3,6 @@
 var WebSocketServer = require('ws').Server;
 var WebSocket = require('ws');
 
-var HOST = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
-var PORT = process.env.OPENSHIFT_NODEJS_PORT || 3000;
-
 // CloseEvent codes
 var DATA_SYNTAX_ERROR = 4000;
 var DATA_UNKNOWN_ATTRIBUTE = 4001;
@@ -13,8 +10,20 @@ var KEY_ALREADY_EXISTS = 4002;
 var KEY_UNKNOWN = 4003;
 var KEY_NO_LONGER_AVAILABLE = 4004;
 
-var server = new WebSocketServer({ host: HOST, port: PORT }, function () {
-  console.log('Server runs on: ' + HOST + ':' + PORT);
+var settings = {
+  host: 'localhost',
+  port: 8000
+};
+process.argv.forEach(function (value, index, array) {
+  if (value.match('-(h|-host)')) {
+    settings.host = array[index + 1];
+  } else if (value.match('-(p|-port)')) {
+    settings.port = array[index + 1];
+  }
+});
+
+var server = new WebSocketServer(settings, function () {
+  console.log('Server runs on: ws://' + settings.host + ':' + settings.port);
 });
 
 server.on('connection', function (socket) {
@@ -26,7 +35,7 @@ server.on('connection', function (socket) {
       error(socket, DATA_SYNTAX_ERROR, 'Server accepts only JSON');
     }
     try {
-      if (msg.hasOwnProperty('key')) {
+      if ('key' in msg) {
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
         var _iteratorError = undefined;
@@ -57,7 +66,7 @@ server.on('connection', function (socket) {
 
         socket.key = msg.key;
         socket.joiningClients = [];
-      } else if (msg.hasOwnProperty('id')) {
+      } else if ('id' in msg) {
         for (var index in socket.joiningClients) {
           if (index === msg.id.toString()) {
             socket.joiningClients[index].send(JSON.stringify({ data: msg.data }));
@@ -65,7 +74,7 @@ server.on('connection', function (socket) {
           }
         }
         socket.send(JSON.stringify({ id: msg.id, unavailable: true }));
-      } else if (msg.hasOwnProperty('join')) {
+      } else if ('join' in msg) {
         var _iteratorNormalCompletion2 = true;
         var _didIteratorError2 = false;
         var _iteratorError2 = undefined;
@@ -99,21 +108,23 @@ server.on('connection', function (socket) {
         }
 
         error(socket, KEY_UNKNOWN, 'Unknown key');
-      } else if (msg.hasOwnProperty('data') && socket.hasOwnProperty('master')) {
+      } else if ('data' in msg && 'master' in socket) {
         var _id = socket.master.joiningClients.indexOf(socket);
         if (socket.master.readyState === WebSocket.OPEN) {
           socket.master.send(JSON.stringify({ id: _id, data: msg.data }));
         }
-      } else {
-        error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format');
       }
+      // } else {
+      //   console.log('data: ', msg)
+      //   error(socket, DATA_UNKNOWN_ATTRIBUTE, 'Unsupported message format')
+      // }
     } catch (event) {
       error(socket, DATA_SYNTAX_ERROR, 'erver accepts only JSON');
     }
   });
 
   socket.on('close', function (event) {
-    if (socket.hasOwnProperty('joiningClients')) {
+    if ('joiningClients' in socket) {
       var _iteratorNormalCompletion3 = true;
       var _didIteratorError3 = false;
       var _iteratorError3 = undefined;
